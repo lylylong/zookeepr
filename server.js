@@ -1,4 +1,5 @@
 // Start by requiring the data, creating a route that the front-end can request data from
+// keep on top
 const { animals } = require("./data/animals");
 
 // initial setup for express.js
@@ -29,18 +30,24 @@ const app = express();
 // }
 
 function filterByQuery(query, animalsArray) {
+  //// used for the formating the query
   let personalityTraitsArray = [];
   // Note that we save the animalsArray as filteredResults here:
   let filteredResults = animalsArray;
   if (query.personalityTraits) {
     // Save personalityTraits as a dedicated array.
     // If personalityTraits is a string, place it into a new array and save.
+    //// my thoughts:
+    //// format the input/query -- then use the formated input to iterate all the animal array
+    //// to see of the animil array has this input/query
     if (typeof query.personalityTraits === "string") {
       personalityTraitsArray = [query.personalityTraits];
     } else {
       personalityTraitsArray = query.personalityTraits;
     }
     // Loop through each trait in the personalityTraits array:
+    //// the filter process
+    //// use forEach only for array!!!
     personalityTraitsArray.forEach((trait) => {
       // Check the trait against each animal in the filteredResults array.
       // Remember, it is initially a copy of the animalsArray,
@@ -80,6 +87,7 @@ function findById(id, animalsArray) {
 }
 
 // To add the require route
+// just before app.listen()
 app.get("/api/animals", (req, res) => {
   let results = animals;
   if (req.query) {
