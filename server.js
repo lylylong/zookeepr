@@ -72,6 +72,12 @@ function filterByQuery(query, animalsArray) {
   // return the filtered results:
   return filteredResults;
 }
+// Above the two routes, add a function called findById()
+// that takes in the id and array of animals and returns a single animal object
+function findById(id, animalsArray) {
+  const result = animalsArray.filter((animal) => animal.id === id)[0];
+  return result;
+}
 
 // To add the require route
 app.get("/api/animals", (req, res) => {
@@ -84,4 +90,9 @@ app.get("/api/animals", (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`API server now on port ${PORT}!`);
+});
+
+app.get("/api/animals/:id", (req, res) => {
+  const result = findById(req.params.id, animals);
+  res.json(result);
 });
