@@ -3,31 +3,16 @@
 const { animals } = require("./data/animals");
 
 // initial setup for express.js
+const fs = require("fs");
+const path = require("path");
 const express = require("express");
 const PORT = process.env.PORT || 3001;
 const app = express();
-
-//With that in mind, instead of handling the filter functionality inside the .get() callback,
-//we're going to break it out into its own function. This will keep our code maintainable and clean
-// function filterByQuery(query, animalsArray) {
-//   let filteredResults = animalsArray;
-//   if (query.diet) {
-//     filteredResults = filteredResults.filter(
-//       (animal) => animal.diet === query.diet
-//     );
-//   }
-//   if (query.species) {
-//     filteredResults = filteredResults.filter(
-//       (animal) => animal.species === query.species
-//     );
-//   }
-//   if (query.name) {
-//     filteredResults = filteredResults.filter(
-//       (animal) => animal.name === query.name
-//     );
-//   }
-//   return filteredResults;
-// }
+// add the following code right underneath where we declared the app variable
+// parse incoming string or array data
+app.use(express.urlencoded({ extended: true }));
+// parse incoming JSON data
+app.use(express.json());
 
 function filterByQuery(query, animalsArray) {
   //// used for the formating the query
@@ -85,6 +70,19 @@ function findById(id, animalsArray) {
   const result = animalsArray.filter((animal) => animal.id === id)[0];
   return result;
 }
+// right below the findById()
+function createNewAnimal(body, animalsArray) {
+  const animal = body;
+  animalsArray.push(animal);
+  fs.writeFileSync(
+    path.join(__dirname, "./data/animals.json"),
+    //The null argument means we don't want to edit any of our existing data
+    //if we did, we could pass something in there
+    //The 2 indicates we want to create white space between our values to make it more readable
+    JSON.stringify({ animals: animalsArray }, null, 2)
+  );
+  return animal;
+}
 
 // To add the require route
 // just before app.listen()
@@ -102,5 +100,38 @@ app.listen(PORT, () => {
 
 app.get("/api/animals/:id", (req, res) => {
   const result = findById(req.params.id, animals);
-  res.json(result);
+  if (result) {
+    res.json(result);
+  } else {
+    res.send(404);
+  }
 });
+
+app.post("/api/animals", (req, res) => {
+  // set id based on what the next index of the array will be
+  req.body.id = animals.length.toString();
+
+  // if any data in req.body is incorrect, send 400 error back
+  if (!validateAnimal(req.body)) {
+    res.status(400).send("The animal is not properly formatted.");
+  } else {
+    const animal = createNewAnimal(req.body, animals);
+    res.json(animal);
+  }
+});
+
+function validateAnimal(animal) {
+  if (!animal.name || typeof animal.name !== "string") {
+    return false;
+  }
+  if (!animal.species || typeof animal.species !== "string") {
+    return false;
+  }
+  if (!animal.diet || typeof animal.diet !== "string") {
+    return false;
+  }
+  if (!animal.personalityTraits || !Array.isArray(animal.personalityTraits)) {
+    return false;
+  }
+  return true;
+}
